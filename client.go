@@ -19,16 +19,25 @@ type legacyRequest struct {
 }
 
 type response struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Debug   string `json:"debug"`
+	Code    string          `json:"code"`
+	Message string          `json:"message"`
+	Debug   json.RawMessage `json:"debug"`
 }
 
 type client struct {
-	baseUrl string
-	uuid    string
-	secret  string
-	hc      *http.Client
+	baseUrl    string
+	apiVersion string
+	uuid       string
+	secret     string
+	hc         *http.Client
+
+	debugLog LogFunc
+}
+
+type LogFunc func(message string)
+
+func noopLog(message string) {
+	// no-op
 }
 
 type Client interface {
@@ -45,10 +54,13 @@ type Client interface {
 	TransactionDeviceStartup(ctx context.Context, deviceId string, data TransactionStartupData) (*Transaction, error)
 	TransactionGet(ctx context.Context, transactionId string) (*Transaction, error)
 	TransactionGetAll(ctx context.Context, filter TransactionFilter) ([]Transaction, int, error)
+
+	SetDebugLog(logFunc LogFunc)
 }
 
 const (
-	defaultBaseUrl = "https://api.rackcorp.net/api/v2.8/"
+	defaultBaseUrl    = "https://api.rackcorp.net/api/"
+	defaultApiVersion = "v2.8"
 )
 
 func NewClient(uuid string, secret string) (Client, error) {
@@ -61,16 +73,45 @@ func NewClient(uuid string, secret string) (Client, error) {
 	}
 
 	return &client{
-		baseUrl: defaultBaseUrl,
-		uuid:    uuid,
-		secret:  secret,
+		baseUrl:    defaultBaseUrl,
+		apiVersion: defaultApiVersion,
+		uuid:       uuid,
+		secret:     secret,
 		hc: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		debugLog: noopLog,
 	}, nil
 }
 
-func (c client) httpJson(ctx context.Context, method string, urlSuffix string, reqObj interface{}, respObj interface{}) error {
+func (c *client) SetDebugLog(logFunc LogFunc) {
+	if logFunc == nil {
+		c.debugLog = noopLog
+	} else {
+		c.debugLog = logFunc
+	}
+}
+
+func (c *client) httpLegacyJson(ctx context.Context, reqObj interface{}, respObj interface{}) error {
+	url, err := url.JoinPath(c.baseUrl, "rest", c.apiVersion, "json.php")
+	if err != nil {
+		return fmt.Errorf("failed to construct url: %w", err)
+	}
+	return c.httpJsonImpl(ctx, http.MethodPost, url, reqObj, respObj)
+
+}
+func (c *client) httpRestJson(ctx context.Context, method string, urlSuffix string, reqObj interface{}, respObj interface{}) error {
+	url, err := url.JoinPath(c.baseUrl, c.apiVersion, urlSuffix)
+	if err != nil {
+		return fmt.Errorf("failed to construct url: %w", err)
+	}
+	return c.httpJsonImpl(ctx, method, url, reqObj, respObj)
+}
+
+func (c *client) httpJsonImpl(ctx context.Context, method string, absoluteUrl string, reqObj interface{}, respObj interface{}) error {
+
+	c.debugLog(fmt.Sprintf("Rackcorp API HTTP request: %s %s", method, absoluteUrl))
+
 	var bodyReader io.Reader = nil
 	if reqObj != nil {
 		reqBody, err := json.Marshal(reqObj)
@@ -78,13 +119,10 @@ func (c client) httpJson(ctx context.Context, method string, urlSuffix string, r
 			return fmt.Errorf("failed to JSON encode request body: %v. %w", reqObj, err)
 		}
 		bodyReader = bytes.NewBuffer(reqBody)
+		c.debugLog(fmt.Sprintf("Rackcorp API HTTP request body: '%s'", string(reqBody)))
 	}
 
-	url, err := url.JoinPath(c.baseUrl, urlSuffix)
-	if err != nil {
-		return fmt.Errorf("failed to construct url: %w", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, absoluteUrl, bodyReader)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -102,7 +140,15 @@ func (c client) httpJson(ctx context.Context, method string, urlSuffix string, r
 		_ = resp.Body.Close()
 	}()
 
-	err = json.NewDecoder(resp.Body).Decode(&respObj)
+	c.debugLog(fmt.Sprintf("Rackcorp API HTTP response status: %d %s", resp.StatusCode, resp.Status))
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read HTTP response body: %w", err)
+	}
+	c.debugLog(fmt.Sprintf("Rackcorp API HTTP response body: '%s'", string(respBytes)))
+
+	err = json.Unmarshal(respBytes, &respObj)
 	if err != nil {
 		return fmt.Errorf("failed to JSON decode response body: %w", err)
 	}

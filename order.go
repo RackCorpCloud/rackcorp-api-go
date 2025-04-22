@@ -110,7 +110,7 @@ type orderCreateResponse struct {
 
 type orderGetResponse struct {
 	response
-	Order *Order `json:"order"`
+	Order *Order `json:"data"`
 }
 
 const (
@@ -183,7 +183,7 @@ func (c *client) OrderConfirm(ctx context.Context, orderId string) (*ConfirmedOr
 		OrderId: orderId,
 	}
 	var resp orderConfirmResponse
-	err := c.httpJson(ctx, http.MethodPost, "json.php", req, &resp)
+	err := c.httpLegacyJson(ctx, req, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to confirm order: %w", err)
 	}
@@ -216,7 +216,7 @@ func (c *client) OrderCreate(ctx context.Context, productCode string, customerId
 	}
 
 	var resp orderCreateResponse
-	err := c.httpJson(ctx, http.MethodPost, "json.php", req, &resp)
+	err := c.httpLegacyJson(ctx, req, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
@@ -237,7 +237,7 @@ func (c *client) OrderGet(ctx context.Context, orderId string) (*Order, error) {
 	}
 
 	var resp orderGetResponse
-	err := c.httpJson(ctx, http.MethodGet, fmt.Sprintf("order/%s", orderId), emptyRequest{}, &resp)
+	err := c.httpRestJson(ctx, http.MethodGet, fmt.Sprintf("order/%s", orderId), emptyRequest{}, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order Id '%s': %w", orderId, err)
 	}

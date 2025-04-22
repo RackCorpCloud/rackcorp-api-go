@@ -30,7 +30,7 @@ type Device struct {
 
 type deviceGetResponse struct {
 	response
-	Device *Device `json:"device"`
+	Device *Device `json:"data"`
 }
 
 type deviceUpdateRequest struct {
@@ -47,7 +47,7 @@ func (c *client) DeviceGet(ctx context.Context, deviceId int) (*Device, error) {
 	}
 
 	var resp deviceGetResponse
-	err := c.httpJson(ctx, http.MethodPost, fmt.Sprintf("devices/%d", deviceId), emptyRequest{}, &resp)
+	err := c.httpRestJson(ctx, http.MethodGet, fmt.Sprintf("devices/%d", deviceId), emptyRequest{}, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device for device Id '%d': %w", deviceId, err)
 	}
@@ -75,7 +75,7 @@ func (c *client) DeviceUpdateFirewall(ctx context.Context, deviceId int, firewal
 	}
 
 	var resp deviceUpdateResponse
-	err := c.httpJson(ctx, http.MethodPut, fmt.Sprintf("devices/%d/firewall", deviceId), req, &resp)
+	err := c.httpRestJson(ctx, http.MethodPut, fmt.Sprintf("devices/%d/firewall", deviceId), req, &resp)
 	if err != nil {
 		return fmt.Errorf("failed to update firewall for device Id '%d': %w", deviceId, err)
 	}

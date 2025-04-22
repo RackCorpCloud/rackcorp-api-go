@@ -29,7 +29,7 @@ type transactionCreateRequest struct {
 
 type transactionCreateResponse struct {
 	response
-	Transaction *createdTransaction `json:"rcTransaction"`
+	Transaction *createdTransaction `json:"data"`
 }
 
 type existingTransaction struct {
@@ -42,9 +42,13 @@ type existingTransaction struct {
 	StatusInfo    string `json:"statusInfo"`
 }
 
+type transactionGetRequest struct {
+	legacyRequest
+	TransactionId string `json:"rcTransactionId"`
+}
 type transactionGetResponse struct {
 	response
-	Transaction *existingTransaction `json:"rcTransaction"`
+	Transaction *existingTransaction `json:"rcTransaction"` // json:"data" for REST
 }
 
 type TransactionFilter struct {
@@ -186,7 +190,7 @@ func (c *client) transactionCreateInternal(ctx context.Context, transactionType 
 	}
 
 	var resp transactionCreateResponse
-	err := c.httpJson(ctx, http.MethodPost, "rctransaction", req, &resp)
+	err := c.httpRestJson(ctx, http.MethodPost, "rctransaction", req, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
@@ -199,8 +203,16 @@ func (c *client) transactionCreateInternal(ctx context.Context, transactionType 
 }
 
 func (c *client) TransactionGet(ctx context.Context, transactionId string) (*Transaction, error) {
+	req := &transactionGetRequest{
+		legacyRequest: legacyRequest{
+			Command: "rctransaction.get",
+		},
+		TransactionId: transactionId,
+	}
+
 	var resp transactionGetResponse
-	err := c.httpJson(ctx, http.MethodGet, fmt.Sprintf("rctransactions/%s", transactionId), emptyRequest{}, &resp)
+	err := c.httpLegacyJson(ctx, req, &resp)
+	//	err := c.httpRestJson(ctx, http.MethodGet, fmt.Sprintf("rctransactions/%s", transactionId), emptyRequest{}, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get transaction id '%s': %w", transactionId, err)
 	}
@@ -225,7 +237,7 @@ func (c *client) TransactionGetAll(ctx context.Context, filter TransactionFilter
 	}
 
 	var resp transactionGetAllResponse
-	err := c.httpJson(ctx, http.MethodPost, "json.php", req, &resp)
+	err := c.httpLegacyJson(ctx, req, &resp)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get transactions: %w", err)
 	}

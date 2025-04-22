@@ -5,6 +5,8 @@ type ApiError struct {
 	Err     error
 }
 
+var _ error = (*ApiError)(nil)
+
 func (e *ApiError) Error() string {
 	if e.Message == "" && e.Err == nil {
 		return "unknown Rackcorp API error"
@@ -22,8 +24,8 @@ func newApiError(resp response, err error) *ApiError {
 	result := &ApiError{
 		Err: err,
 	}
-	if resp.Debug != "" {
-		result.Message = resp.Debug
+	if len(resp.Debug) > 0 {
+		result.Message = string(resp.Debug)
 		return result
 	}
 	if resp.Message != "" {
