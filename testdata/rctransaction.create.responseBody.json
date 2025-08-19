@@ -1,1 +1,13 @@
-{"rcTransaction":{"objType":"DEVICE","type":"STARTUP","data":null,"confirmationRequired":false,"confirmationText":"","rcTransactionId":141414,"objId":"879"},"code":"OK","message":"Transaction successfully created"}
+{
+    "data": {
+        "objType": "DEVICE",
+        "type": "STARTUP",
+        "data": null,
+        "confirmationRequired": false,
+        "confirmationText": "",
+        "rcTransactionId": 141414,
+        "objId": "879"
+    },
+    "code": "OK",
+    "message": "Transaction successfully created"
+}

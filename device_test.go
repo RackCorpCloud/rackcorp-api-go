@@ -7,10 +7,11 @@ import (
 
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeviceGet(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const deviceId = 5075
 	responseBody := getTestDataString(t, "device.get.responseBody.json")
@@ -18,20 +19,20 @@ func TestDeviceGet(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post(fmt.Sprintf("/api/v2.8/devices/%d", deviceId)).
+		Get(fmt.Sprintf("/api/v2.8/devices/%d", deviceId)).
 		Reply(200).
 		BodyString(responseBody)
 
 	device, err := client.DeviceGet(context.TODO(), deviceId)
-	assert.Nil(t, err, "DeviceGet error")
-
-	assert.Equal(t, 5075, device.DeviceId, "DeviceId")
-
+	assertGockNoUnmatchedRequests(t)
 	assert.True(t, gock.IsDone(), "gock.IsDone")
+
+	require.NoError(t, err, "DeviceGet error")
+	assert.Equal(t, 5075, device.DeviceId, "DeviceId")
 }
 
 func TestDeviceUpdateFirewall(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const deviceId = 678
 	responseBody := "{\"code\": \"OK\", \"message\": \"good to go\"}"
@@ -44,10 +45,11 @@ func TestDeviceUpdateFirewall(t *testing.T) {
 		BodyString(responseBody)
 
 	policies := []FirewallPolicy{
-		FirewallPolicy{Direction: "INPUT"},
+		{Direction: "INPUT"},
 	}
 	err := client.DeviceUpdateFirewall(context.TODO(), deviceId, policies)
-	assert.Nil(t, err, "DeviceGet error")
-
+	assertGockNoUnmatchedRequests(t)
 	assert.True(t, gock.IsDone(), "gock.IsDone")
+
+	require.NoError(t, err, "DeviceUpdateFirewall error")
 }

@@ -6,10 +6,11 @@ import (
 
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOrderConfirm(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const orderId = "432"
 	const responseBody = `{"contractID":[543],"code":"OK","message":"Order confirmed"}`
@@ -17,12 +18,13 @@ func TestOrderConfirm(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/v2.8/json.php").
+		Post("/api/rest/v2.8/json.php").
 		Reply(200).
 		BodyString(responseBody)
 
 	order, err := client.OrderConfirm(context.TODO(), orderId)
-	assert.Nil(t, err, "OrderConfirm error")
+	assertGockNoUnmatchedRequests(t)
+	assert.NoError(t, err, "OrderConfirm error")
 
 	assert.Contains(t, order.ContractIds, "543", "ContractIds")
 
@@ -30,7 +32,7 @@ func TestOrderConfirm(t *testing.T) {
 }
 
 func TestOrderCreate(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const productCode = "SERVER_VIRTUAL_PERFORMANCE_AU"
 	const customerId = "456"
@@ -46,12 +48,13 @@ func TestOrderCreate(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/v2.8/json.php").
+		Post("/api/rest/v2.8/json.php").
 		Reply(200).
 		BodyString(responseBody)
 
 	order, err := client.OrderCreate(context.TODO(), productCode, customerId, productDetails)
-	assert.Nil(t, err, "OrderCreate error")
+	assertGockNoUnmatchedRequests(t)
+	assert.NoError(t, err, "OrderCreate error")
 
 	assert.Equal(t, "123", order.OrderId, "OrderId")
 	assert.Contains(t, order.ChangeText, "Add NEW", "ChangeText")
@@ -60,10 +63,10 @@ func TestOrderCreate(t *testing.T) {
 }
 
 func TestOrderGet(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const orderId = "123"
-	const responseBody = `{"order":{"orderId":"123","customerId":"456","status":"ACCEPTED","contractId":"789"},"code":"OK","message":"Order lookup successful"}`
+	const responseBody = `{"data":{"orderId":"123","customerId":"456","status":"ACCEPTED","contractId":"789"},"code":"OK","message":"Order lookup successful"}`
 
 	client := getTestClient(t)
 
@@ -73,7 +76,8 @@ func TestOrderGet(t *testing.T) {
 		BodyString(responseBody)
 
 	order, err := client.OrderGet(context.TODO(), orderId)
-	assert.Nil(t, err, "OrderGet error")
+	assertGockNoUnmatchedRequests(t)
+	require.NoError(t, err, "OrderGet error")
 
 	assert.Equal(t, "123", order.OrderId, "OrderId")
 	assert.Equal(t, "456", order.CustomerId, "CustomerId")

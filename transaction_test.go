@@ -6,10 +6,11 @@ import (
 
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransactionCreate(t *testing.T) {
-	defer gock.Off()
+	defer gock.OffAll()
 
 	const objectId = "879"
 	responseBody := getTestDataString(t, "rctransaction.create.responseBody.json")
@@ -27,7 +28,8 @@ func TestTransactionCreate(t *testing.T) {
 		TransactionObjectTypeDevice,
 		objectId,
 		false)
-	assert.Nil(t, err, "TransactionCreate error")
+	assertGockNoUnmatchedRequests(t)
+	require.NoError(t, err, "TransactionCreate error")
 
 	assert.Equal(t, "141414", transaction.TransactionId, "TransactionId")
 	assert.Equal(t, "STARTUP", transaction.Type, "Type")
