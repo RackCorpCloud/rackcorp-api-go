@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,10 @@ type response struct {
 	Code    string          `json:"code"`
 	Message string          `json:"message"`
 	Debug   json.RawMessage `json:"debug"`
+}
+
+func (r *response) IsOK() bool {
+	return strings.EqualFold(r.Code, "OK")
 }
 
 type client struct {
@@ -56,8 +61,12 @@ type Client interface {
 	TransactionGet(ctx context.Context, transactionId string) (*Transaction, error)
 	TransactionGetAll(ctx context.Context, filter TransactionFilter) ([]Transaction, int, error)
 
+	// TODO LoadBalancer() LoadBalancerClient
+
 	SetDebugLog(logFunc LogFunc)
 }
+
+var _ Client = (*client)(nil)
 
 const (
 	defaultBaseUrl    = "https://api.rackcorp.net/api/"
@@ -92,6 +101,10 @@ func NewClientFromEnv() (Client, error) {
 		return nil, errors.New("failed to load API credentials from environment")
 	}
 	return NewClient(cred.UUID, cred.Secret)
+}
+
+func (c *client) LoadBalancer() LoadBalancerClient {
+	return &loadBalancerClient{c: c}
 }
 
 func (c *client) SetDebugLog(logFunc LogFunc) {
