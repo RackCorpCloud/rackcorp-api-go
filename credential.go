@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -55,7 +56,11 @@ func newApiCredentialFromEnv() *apiCredential {
 		}
 	}
 
-	home := os.Getenv("HOME")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		withError(DefaultLogger, err).Warn("failed to get user home directory")
+		return nil
+	}
 	if len(home) == 0 {
 		return nil
 	}
@@ -65,18 +70,26 @@ func newApiCredentialFromEnv() *apiCredential {
 		filepath.Join(home, ".config", ".rackcorp", "config"),
 	}
 	for _, path := range paths {
-		f, err := os.Open(path)
+		f, err := os.Open(path) // #nosec G304 -- user home dir
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 		if err != nil {
-			// TODO log?
+			withError(DefaultLogger, err).Warn("failed to open file",
+				slog.String("file.path", path))
 			continue
 		}
-		defer f.Close()
+		defer func() {
+			err := f.Close()
+			if err != nil {
+				withError(DefaultLogger, err).Warn("failed to close file",
+					slog.String("file.path", path))
+			}
+		}()
 		cred, err := newApiCredentialFromIni(f)
 		if err != nil {
-			// TODO log?
+			withError(DefaultLogger, err).Warn("failed to parse file",
+				slog.String("file.path", path))
 			continue
 		}
 		if cred != nil {
