@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 	"time"
 )
 
@@ -30,8 +31,8 @@ type client struct {
 	uuid       string
 	secret     string
 	hc         *http.Client
-
-	debugLog LogFunc
+	userAgent  string
+	debugLog   LogFunc
 }
 
 type LogFunc func(message string)
@@ -80,7 +81,8 @@ func NewClient(uuid string, secret string) (Client, error) {
 		hc: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		debugLog: noopLog,
+		userAgent: fmt.Sprintf("rackcorpapi/1.0 golang/%s", runtime.Version()),
+		debugLog:  noopLog,
 	}, nil
 }
 
@@ -130,6 +132,7 @@ func (c *client) httpJsonImpl(ctx context.Context, method string, absoluteUrl st
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", c.userAgent)
 	req.SetBasicAuth(c.uuid, c.secret)
 
 	resp, err := c.hc.Do(req)
