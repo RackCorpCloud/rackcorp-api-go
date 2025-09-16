@@ -86,6 +86,14 @@ func NewClient(uuid string, secret string) (Client, error) {
 	}, nil
 }
 
+func NewClientFromEnv() (Client, error) {
+	cred := newApiCredentialFromEnv()
+	if cred == nil {
+		return nil, errors.New("failed to load API credentials from environment")
+	}
+	return NewClient(cred.UUID, cred.Secret)
+}
+
 func (c *client) SetDebugLog(logFunc LogFunc) {
 	if logFunc == nil {
 		c.debugLog = noopLog
