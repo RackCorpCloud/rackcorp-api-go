@@ -91,7 +91,6 @@ type loadBalancerClient struct {
 var _ LoadBalancerClient = (*loadBalancerClient)(nil)
 
 func (lbc *loadBalancerClient) GetAll(ctx context.Context, filter LoadBalancerFilter) ([]LoadBalancer, error) {
-	var c client
 	req := loadBalancerGetAllRequest{
 		legacyRequest: legacyRequest{
 			Command: "loadbalancer.getall",
@@ -99,7 +98,7 @@ func (lbc *loadBalancerClient) GetAll(ctx context.Context, filter LoadBalancerFi
 		LoadBalancerFilter: filter,
 	}
 	var resp loadBalancerGetAllResponse
-	err := c.httpLegacyJson(ctx, &req, &resp)
+	err := lbc.c.httpLegacyJson(ctx, &req, &resp)
 	if err != nil {
 		return nil, err
 	}

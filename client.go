@@ -62,6 +62,7 @@ type Client interface {
 	TransactionGetAll(ctx context.Context, filter TransactionFilter) ([]Transaction, int, error)
 
 	// TODO LoadBalancer() LoadBalancerClient
+	Device() DeviceClient
 
 	SetDebugLog(logFunc LogFunc)
 }
@@ -101,6 +102,10 @@ func NewClientFromEnv() (Client, error) {
 		return nil, errors.New("failed to load API credentials from environment")
 	}
 	return NewClient(cred.UUID, cred.Secret)
+}
+
+func (c *client) Device() DeviceClient {
+	return &deviceClient{c: c}
 }
 
 func (c *client) LoadBalancer() LoadBalancerClient {

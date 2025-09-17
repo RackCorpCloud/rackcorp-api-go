@@ -19,6 +19,12 @@ func TestJsonUnmarshalNumberToString(t *testing.T) {
 	err = json.Unmarshal([]byte(`{"X": 123}`), &outB)
 	assert.NoError(t, err)
 	assert.Equal(t, "123", outB.X.String())
+
+	// And unmarshalling a string into json.Number works
+	err = json.Unmarshal([]byte(`{"X": "456"}`), &outB)
+	assert.NoError(t, err)
+	assert.Equal(t, "456", outB.X.String())
+
 }
 
 func TestJsonUnmarshalInt64(t *testing.T) {
