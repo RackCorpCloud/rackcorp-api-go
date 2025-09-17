@@ -12,7 +12,7 @@ test:
 .PHONY: test
 
 integration-test:
-	INTEGRATION_TEST=1 go test ./...
+	. ./.env && INTEGRATION_TEST=1 go test ./...
 .PHONY: integration-test
 
 lint:
