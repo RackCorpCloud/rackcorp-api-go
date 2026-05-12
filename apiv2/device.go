@@ -1,10 +1,10 @@
 package apiv2
 
-import "net/netip"
+import (
+	"net/netip"
+)
 
 type DeviceID int
-
-type CustomerID int
 
 type Device struct {
 	DeviceID   DeviceID

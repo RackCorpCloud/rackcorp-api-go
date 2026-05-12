@@ -61,7 +61,7 @@ type Client interface {
 	TransactionGet(ctx context.Context, transactionId string) (*Transaction, error)
 	TransactionGetAll(ctx context.Context, filter TransactionFilter) ([]Transaction, int, error)
 
-	// TODO LoadBalancer() LoadBalancerClient
+	LoadBalancer() LoadBalancerClient
 	Device() DeviceClient
 
 	SetDebugLog(logFunc LogFunc)
