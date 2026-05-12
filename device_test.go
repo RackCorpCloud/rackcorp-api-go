@@ -19,7 +19,7 @@ func TestDeviceGet(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Get(fmt.Sprintf("/api/v2.8/devices/%d", deviceId)).
+		Get(fmt.Sprintf("/api/v2.9/devices/%d", deviceId)).
 		Reply(200).
 		BodyString(responseBody)
 
@@ -40,7 +40,7 @@ func TestDeviceUpdateFirewall(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Put(fmt.Sprintf("/api/v2.8/devices/%d/firewall", deviceId)).
+		Put(fmt.Sprintf("/api/v2.9/devices/%d/firewall", deviceId)).
 		Reply(200).
 		BodyString(responseBody)
 

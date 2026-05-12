@@ -18,7 +18,7 @@ func TestOrderContractGet(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/rest/v2.8/json.php").
+		Post("/api/rest/v2.9/json.php").
 		Reply(200).
 		BodyString(responseBody)
 

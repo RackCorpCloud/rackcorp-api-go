@@ -18,7 +18,7 @@ func TestTransactionCreate(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/v2.8/rctransaction").
+		Post("/api/v2.9/rctransaction").
 		Reply(200).
 		BodyString(responseBody)
 

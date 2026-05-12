@@ -71,7 +71,7 @@ var _ Client = (*client)(nil)
 
 const (
 	defaultBaseUrl    = "https://api.rackcorp.net/api/"
-	defaultApiVersion = "v2.8"
+	defaultApiVersion = "v2.9"
 )
 
 func NewClient(uuid string, secret string) (Client, error) {

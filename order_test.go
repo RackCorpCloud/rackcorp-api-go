@@ -18,7 +18,7 @@ func TestOrderConfirm(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/rest/v2.8/json.php").
+		Post("/api/rest/v2.9/json.php").
 		Reply(200).
 		BodyString(responseBody)
 
@@ -48,7 +48,7 @@ func TestOrderCreate(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Post("/api/rest/v2.8/json.php").
+		Post("/api/rest/v2.9/json.php").
 		Reply(200).
 		BodyString(responseBody)
 
@@ -71,7 +71,7 @@ func TestOrderGet(t *testing.T) {
 	client := getTestClient(t)
 
 	gock.New("https://api.rackcorp.net").
-		Get("/api/v2.8/order/123").
+		Get("/api/v2.9/order/123").
 		Reply(200).
 		BodyString(responseBody)
 
